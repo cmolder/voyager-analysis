@@ -1,3 +1,4 @@
+trace,weight
 600.perlbench-s0,0.257321
 600.perlbench-s1,0.480997
 600.perlbench-s2,0.252336
