@@ -1,3 +1,4 @@
-prefetcher,429.mcf,471.omnetpp,473.astar
-Paper-ISB, 0.625, 0.75, 0.7
-Paper-BO, 0.25, 0.27, 0.34
+prefetcher,429.mcf,471.omnetpp,473.astar,450.soplex,482.sphinx3
+Paper-ISB, 0.625, 0.75, 0.70, 0.80, 0.97
+Paper-BO, 0.25, 0.27, 0.34, 0.60, 0.95
+Paper-Voyager, 0.80, 0.74, 0.83, 0.91, 0.95

@@ -59,8 +59,12 @@ def parse_champsim_result_file(f, max_instruction_num=None, min_instruction_inte
                 last_instruction = instructions
         
         if 'LLC PREFETCH' in line and 'REQUESTED' in line:
-            data['useful_prefetches'] = int(line.split()[-3])
-            data['useless_prefetches'] = int(line.split()[-1])
+            #print(line)
+            #print(line.split())
+            data['useful_prefetches'] = int(line.split()[-4])
+            data['useless_prefetches'] = int(line.split()[-6])
+            data['uac_correct_prefetches'] = int(line.split()[-1])
+            data['issued_prefetches'] = int(line.split()[-8])
         if 'LLC LOAD' in line:
             data['llc_load_hits'] = int(line.split()[-3])
         if 'LLC RFO' in line:
@@ -68,6 +72,7 @@ def parse_champsim_result_file(f, max_instruction_num=None, min_instruction_inte
             
     safediv = lambda x, y : x / y if y != 0 else 0
     data['accuracy'] = safediv(data['useful_prefetches'], (data['useful_prefetches'] + data['useless_prefetches']))
+    data['uac'] = safediv(data['uac_correct_prefetches'], data['issued_prefetches'])
     # Coverage must be calculated separately, since it depends on the baseline prefetcher.
     
     return attrdict.AttrDict(data)
