@@ -67,8 +67,10 @@ def parse_champsim_result_file(f, max_instruction_num=None, min_instruction_inte
             data['issued_prefetches'] = int(line.split()[-8])
         if 'LLC LOAD' in line:
             data['llc_load_hits'] = int(line.split()[-3])
+            data['llc_load_misses'] = int(line.split()[-1])            
         if 'LLC RFO' in line:
             data['llc_rfo_hits'] = int(line.split()[-3])
+            data['llc_rfo_misses'] = int(line.split()[-1])
             
     safediv = lambda x, y : x / y if y != 0 else 0
     data['accuracy'] = safediv(data['useful_prefetches'], (data['useful_prefetches'] + data['useless_prefetches']))
