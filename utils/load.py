@@ -61,8 +61,8 @@ def parse_champsim_result_file(f, max_instruction_num=None, min_instruction_inte
         if 'LLC PREFETCH' in line and 'REQUESTED' in line:
             #print(line)
             #print(line.split())
-            data['useful_prefetches'] = int(line.split()[-4])
-            data['useless_prefetches'] = int(line.split()[-6])
+            data['useless_prefetches'] = int(line.split()[-4])
+            data['useful_prefetches'] = int(line.split()[-6])
             data['uac_correct_prefetches'] = int(line.split()[-1])
             data['issued_prefetches'] = int(line.split()[-8])
         if 'LLC LOAD' in line:
@@ -104,6 +104,14 @@ def load_champsim_base_results(base, tracename, verbose=False, **kwargs):
         print('    Found variations:', *data.keys())
     return data
 
-def parse_paper_result_file(f):
+def parse_paper_result_file(f, strip_prefixes=False):
     df = pd.read_csv(f, index_col='prefetcher')
+    
+    if strip_prefixes:
+        newcolumns = []
+        for c in df.columns:
+            c = c.split('.')[-1]
+            newcolumns.append(c)
+        df.columns = newcolumns
+    
     return df.to_dict()
