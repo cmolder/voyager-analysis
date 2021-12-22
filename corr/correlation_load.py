@@ -1,5 +1,10 @@
+"""Compute correlation between access history and next prefetch,
+using load traces.
+"""
+
 import argparse
 import lzma
+import time
 
 
 """File I/O"""
@@ -118,6 +123,7 @@ def get_argument_parser():
 def compute_correlation(load_trace, depth, max_hist_len):
     correlation_data = CorrelationData(depth, max_hist_len)
     page_correlation_data = CorrelationData(depth, max_hist_len, shift=6)
+    start = time.time()
 
     if load_trace.endswith('xz'):
         with lzma.open(load_trace, mode='rt', encoding='utf-8') as f:
@@ -130,6 +136,7 @@ def compute_correlation(load_trace, depth, max_hist_len):
     print_freqs(page_correlation_data.compute_freqs(), 'Pages')
     print_freqs(correlation_data.compute_freqs(weighted=True), 'Weighted Cache Lines')
     print_freqs(page_correlation_data.compute_freqs(weighted=True), 'Weighted Pages')
+    print('Time to run:', time.time() - start)
 
 
 if __name__ == '__main__':
