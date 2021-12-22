@@ -1,0 +1,73 @@
+"""Read ChampSim trace (compressed binary)"""
+
+import lzma
+import gzip
+import argparse
+
+INST_SIZE = 64
+N_INST_DESTS = 2
+N_INST_SRCS = 4
+
+def read_file(f, max_inst=100):
+    for i, bytes in enumerate(_get_instruction_bytes(f)):
+        #print(f'{i:8}:', bytes)
+        inst = Instruction(bytes)
+        print(f'{i:8}:', inst)
+
+        if i >= max_inst:
+            return
+
+def _get_instruction_bytes(f):
+    while True:
+        chars = f.read(INST_SIZE)
+        if not chars or len(chars) < INST_SIZE:
+            break
+        yield chars
+
+
+class Instruction:
+    def __init__(self, bytes):
+        self.pc = int.from_bytes(bytes[:8], 'big')
+        assert bytes[8] == 0 or bytes[8] == 1, f'is_branch not boolean, is {bytes[8]}'
+        assert bytes[9] == 0 or bytes[9] == 1, f'branch_taken not boolean, is {bytes[9]}'
+        self.is_branch = bool(bytes[8])
+        self.branch_taken = bool(bytes[9])
+
+        self.dest_regs = []
+        self.src_regs = []
+        self.dest_mem = []
+        self.src_mem = []
+
+        for i in range(N_INST_DESTS):
+            self.dest_regs.append(bytes[10 + i])
+        for i in range(N_INST_SRCS):
+            self.src_regs.append(bytes[10 + N_INST_DESTS + i])
+        for i in range(N_INST_DESTS):
+            start = 10 + N_INST_DESTS + N_INST_SRCS + i * 8
+            addr = bytes[start : start + 8]
+            self.dest_mem.append(int.from_bytes(addr, 'big'))
+        for i in range(N_INST_SRCS):
+            start = 10 + 9*N_INST_DESTS + N_INST_SRCS + i * 8
+            addr = bytes[start : start + 8]
+            self.src_mem.append(int.from_bytes(addr, 'big'))
+
+    def __str__(self):
+        return f'pc={hex(self.pc)} branch={str(self.is_branch):5} branch_taken={str(self.branch_taken):5} dest_regs={self.dest_regs} src_regs={self.src_regs} dest_mem={[hex(a) for a in self.dest_mem]} src_mem={[hex(a) for a in self.src_mem]}'
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('trace')
+parser.add_argument('--max-inst', default=100, type=int)
+args = parser.parse_args()
+
+if args.trace.endswith('xz'):
+    with lzma.open(args.trace, mode='rt', encoding='utf-8') as f:
+        data = read_file(f, args.max_inst)
+elif args.trace.endswith('gz'):
+    with gzip.open(args.trace, mode='r') as f:
+        data = read_file(f, args.max_inst)
+else:
+    with open(args.trace) as f:
+        data = read_file(f, args.max_inst)
+
