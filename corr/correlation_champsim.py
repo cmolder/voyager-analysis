@@ -7,10 +7,12 @@ Need to run from above corr/ directory. If you still get an error,
 try export PYTHONPATH=.
 """
 
+import os
 import argparse
 import lzma
 import gzip
 import time
+from tqdm import tqdm
 from utils.champsim_trace import get_instructions
 
 
@@ -22,6 +24,19 @@ def gather_correlation_data(f, cd, pcd):
         if not inst.is_branch and len(inst.src_mem) > 0:
             cd.add_addr(inst.src_mem[0])
             pcd.add_addr(inst.src_mem[0]) # TODO what if there is more than one source address?
+
+def gather_correlation_data_with_progress(f, g, cd, pcd, size=None):
+    """Wrapper function to gather correlation data
+    from each address in the load trace."""
+    with tqdm(total=size, unit='B', unit_scale=True, unit_divisor=1024, dynamic_ncols=True) as pbar:
+        for inst in get_instructions(g):
+            pbar.n = f.tell() # Get position in compressed gzip file for pbar.
+            pbar.update(0)    # ref: https://stackoverflow.com/questions/48765610/reading-lines-from-gzipped-text-file-in-python-and-get-number-of-original-compre
+
+            if not inst.is_branch and len(inst.src_mem) > 0:
+                cd.add_addr(inst.src_mem[0])
+                pcd.add_addr(inst.src_mem[0]) # TODO what if there is more than one source address?
+ 
 
 
 def extract_addr(line):
@@ -89,6 +104,7 @@ class CorrelationData(object):
 
         return freqs
 
+
 def print_freqs(freqs, suffix=''):
     for hist_len in freqs:
         print(hist_len, suffix)
@@ -103,7 +119,7 @@ def get_argument_parser():
     parser.add_argument('--depth', type=int, default=1)
     parser.add_argument('--max-hist-len', type=int, default=5)
     args = parser.parse_args()
-    
+
     print('Arguments:')
     print('    ChampSim trace :', args.champsim_trace)
     print('    Depth          :', args.depth)
@@ -118,11 +134,15 @@ def compute_correlation(csim_trace, depth, max_hist_len):
     start = time.time()
 
     if csim_trace.endswith('xz'):
-        with lzma.open(csim_trace, mode='r', encoding='utf-8') as f:
-            gather_correlation_data(f, correlation_data, page_correlation_data)     
+        with lzma.open(csim_trace, mode='r') as f:
+            gather_correlation_data(f, correlation_data, page_correlation_data)
     elif csim_trace.endswith('gz'):
-        with gzip.open(csim_trace, mode='r') as f:
-            gather_correlation_data(f, correlation_data, page_correlation_data)  
+        with open(csim_trace, mode='rb') as f:
+            g = gzip.GzipFile(fileobj=f)
+            gather_correlation_data_with_progress(
+                f, g, correlation_data, page_correlation_data,
+                size=os.path.getsize(csim_trace)
+            )
     else:
         with open(csim_trace) as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)
@@ -137,3 +157,4 @@ def compute_correlation(csim_trace, depth, max_hist_len):
 if __name__ == '__main__':
     args = get_argument_parser()
     compute_correlation(args.champsim_trace, args.depth, args.max_hist_len)
+

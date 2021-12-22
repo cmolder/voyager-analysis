@@ -29,7 +29,7 @@ def get_instructions(f):
 
 class Instruction:
     def __init__(self, bytes):
-        self.pc = int.from_bytes(bytes[:8], 'big')
+        self.pc = int.from_bytes(bytes[:8], 'little')
         assert bytes[8] == 0 or bytes[8] == 1, f'is_branch not boolean, is {bytes[8]}'
         assert bytes[9] == 0 or bytes[9] == 1, f'branch_taken not boolean, is {bytes[9]}'
         self.is_branch = bool(bytes[8])
@@ -50,14 +50,14 @@ class Instruction:
                 self.src_regs.append(reg)
         for i in range(N_INST_DESTS):
             start = 10 + N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = int.from_bytes(bytes[start : start + 8], 'big')
+            addr = int.from_bytes(bytes[start : start + 8], 'little')
             if addr > 0:
                 self.dest_mem.append(addr)
         for i in range(N_INST_SRCS):
             start = 10 + 9*N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = int.from_bytes(bytes[start : start + 8], 'big')
+            addr = int.from_bytes(bytes[start : start + 8], 'little')
             if addr > 0:
-                self.dest_mem.append(addr)
+                self.src_mem.append(addr)
 
     def __str__(self):
         return f'pc={hex(self.pc)} branch={str(self.is_branch):5} branch_taken={str(self.branch_taken):5} dest_regs={self.dest_regs} src_regs={self.src_regs} dest_mem={[hex(a) for a in self.dest_mem]} src_mem={[hex(a) for a in self.src_mem]}'
