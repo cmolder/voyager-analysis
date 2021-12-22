@@ -136,7 +136,7 @@ def compute_correlation(load_trace, depth, max_hist_len):
     print_freqs(page_correlation_data.compute_freqs(), 'Pages')
     print_freqs(correlation_data.compute_freqs(weighted=True), 'Weighted Cache Lines')
     print_freqs(page_correlation_data.compute_freqs(weighted=True), 'Weighted Pages')
-    print('Time to run:', time.time() - start)
+    print('Time to run:', (time.time() - start) / 60, 'min')
 
 
 if __name__ == '__main__':

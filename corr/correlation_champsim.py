@@ -9,6 +9,7 @@ try export PYTHONPATH=.
 
 import argparse
 import lzma
+import gzip
 import time
 from utils.champsim_trace import get_instructions
 
@@ -98,38 +99,41 @@ def print_freqs(freqs, suffix=''):
 """Driver (and helper) functions"""
 def get_argument_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('load_trace')
+    parser.add_argument('champsim_trace')
     parser.add_argument('--depth', type=int, default=1)
     parser.add_argument('--max-hist-len', type=int, default=5)
     args = parser.parse_args()
     
     print('Arguments:')
-    print('    Load trace     :', args.load_trace)
+    print('    ChampSim trace :', args.champsim_trace)
     print('    Depth          :', args.depth)
     print('    Max history len:', args.max_hist_len)
 
     return args
 
 
-def compute_correlation(load_trace, depth, max_hist_len):
+def compute_correlation(csim_trace, depth, max_hist_len):
     correlation_data = CorrelationData(depth, max_hist_len)
     page_correlation_data = CorrelationData(depth, max_hist_len, shift=6)
     start = time.time()
 
-    if load_trace.endswith('xz'):
-        with lzma.open(load_trace, mode='rt', encoding='utf-8') as f:
+    if csim_trace.endswith('xz'):
+        with lzma.open(csim_trace, mode='r', encoding='utf-8') as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)     
+    elif csim_trace.endswith('gz'):
+        with gzip.open(csim_trace, mode='r') as f:
+            gather_correlation_data(f, correlation_data, page_correlation_data)  
     else:
-        with open(load_trace) as f:
+        with open(csim_trace) as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)
 
     print_freqs(correlation_data.compute_freqs(), 'Cache Lines')
     print_freqs(page_correlation_data.compute_freqs(), 'Pages')
     print_freqs(correlation_data.compute_freqs(weighted=True), 'Weighted Cache Lines')
     print_freqs(page_correlation_data.compute_freqs(weighted=True), 'Weighted Pages')
-    print('Time to run:', time.time() - start)
+    print('Time to run:', (time.time() - start) / 60, 'min')
 
 
 if __name__ == '__main__':
     args = get_argument_parser()
-    compute_correlation(args.load_trace, args.depth, args.max_hist_len)
+    compute_correlation(args.champsim_trace, args.depth, args.max_hist_len)
