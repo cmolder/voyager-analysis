@@ -134,7 +134,7 @@ def compute_correlation(csim_trace, depth, max_hist_len):
     start = time.time()
 
     if csim_trace.endswith('xz'):
-        with lzma.open(csim_trace, mode='r') as f:
+        with lzma.open(csim_trace, mode='rb') as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)
     elif csim_trace.endswith('gz'):
         with open(csim_trace, mode='rb') as f:
@@ -144,7 +144,7 @@ def compute_correlation(csim_trace, depth, max_hist_len):
                 size=os.path.getsize(csim_trace)
             )
     else:
-        with open(csim_trace) as f:
+        with open(csim_trace, mode='rb') as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)
 
     print_freqs(correlation_data.compute_freqs(), 'Cache Lines')
