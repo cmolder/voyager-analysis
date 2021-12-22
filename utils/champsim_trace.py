@@ -41,17 +41,23 @@ class Instruction:
         self.src_mem = []
 
         for i in range(N_INST_DESTS):
-            self.dest_regs.append(bytes[10 + i])
+            reg = bytes[10 + i]
+            if reg > 0:
+                self.dest_regs.append(reg)
         for i in range(N_INST_SRCS):
-            self.src_regs.append(bytes[10 + N_INST_DESTS + i])
+            reg = bytes[10 + N_INST_DESTS + i]
+            if reg > 0:
+                self.src_regs.append(reg)
         for i in range(N_INST_DESTS):
             start = 10 + N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = bytes[start : start + 8]
-            self.dest_mem.append(int.from_bytes(addr, 'big'))
+            addr = int.from_bytes(bytes[start : start + 8], 'big')
+            if addr > 0:
+                self.dest_mem.append(addr)
         for i in range(N_INST_SRCS):
             start = 10 + 9*N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = bytes[start : start + 8]
-            self.src_mem.append(int.from_bytes(addr, 'big'))
+            addr = int.from_bytes(bytes[start : start + 8], 'big')
+            if addr > 0:
+                self.dest_mem.append(addr)
 
     def __str__(self):
         return f'pc={hex(self.pc)} branch={str(self.is_branch):5} branch_taken={str(self.branch_taken):5} dest_regs={self.dest_regs} src_regs={self.src_regs} dest_mem={[hex(a) for a in self.dest_mem]} src_mem={[hex(a) for a in self.src_mem]}'

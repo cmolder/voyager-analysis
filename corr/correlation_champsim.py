@@ -2,18 +2,15 @@
 using ChampSim traces.
 
 TODO: Implement branch history
+
+Need to run from above corr/ directory. If you still get an error,
+try export PYTHONPATH=.
 """
 
 import argparse
 import lzma
 import time
-
-try:
-    from utils.champsim_trace import get_instructions
-except:
-    import os
-    os.chdir('../')
-    from utils.champsim_trace import get_instructions
+from utils.champsim_trace import get_instructions
 
 
 """File I/O"""
