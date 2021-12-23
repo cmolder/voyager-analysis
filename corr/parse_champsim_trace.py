@@ -15,11 +15,11 @@ args = parser.parse_args()
 
 if args.trace.endswith('xz'):
     with lzma.open(args.trace, mode='rb') as f:
-        data = read_champsim_trace(f, args.max_inst)
+        read_champsim_trace(f, args.max_inst)
 elif args.trace.endswith('gz'):
     with gzip.open(args.trace, mode='rb') as f:
-        data = read_champsim_trace(f, args.max_inst)
+        read_champsim_trace(f, args.max_inst)
 else:
     with open(args.trace, mode='rb') as f:
-        data = read_champsim_trace(f, args.max_inst)
+        read_champsim_trace(f, args.max_inst)
 

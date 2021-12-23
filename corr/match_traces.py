@@ -38,11 +38,9 @@ def match_traces(cf, lf):
 
         if uiid > prev_uiid:
             for i in range(prev_uiid, uiid):
-                #print('reading cs instruction', i)
                 inst = next(get_instructions(cf), None)
         else:
             cf.seek((uiid - 1) * INST_SIZE)
-            #print('reading cs instruction', i)
             inst = next(get_instructions(cf), None)
 
         prev_uiid = uiid
@@ -51,11 +49,12 @@ def match_traces(cf, lf):
             print('Done matching traces. Everything checks out.')
             return
 
+        # Assertion checks
         assert len(inst.src_mem) == 1, f'{uiid} matches with instruction with 0 / 2+ load addreses {inst.src_mem} : {inst}'
         assert hex(inst.pc) == pc, f'{uiid} pcs do not match: CS pc={hex(inst.pc)}, load PC={pc}'
-
         if src_addr in src_mapping:
             assert src_mapping[src_addr] == inst.src_mem, '{uiid} mapping between addresses is not one-to-one: Load {src_addr}, CS {hex(inst.pc)} vs. {hex(src_mapping[src_addr])}'
+        src_mapping[src_addr] = inst.src_mem
 
         print()
         print(f'{uiid:8} Load: pc={pc} src_mem={src_addr}')
@@ -96,4 +95,5 @@ if __name__ == '__main__':
 
     with cs_open(args.champsim_trace, mode='rb') as cf, l_open(args.load_trace, mode='rt', encoding='utf-8') as lf:
         match_traces(cf, lf)
+
 
