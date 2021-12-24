@@ -38,7 +38,8 @@ def assert_comparison(csim_inst, load_uiid, load_pc):
     assert len(csim_inst.src_mem) == 1, f'{load_uiid} matches with an instruction with 0 / 2+ load addreses {csim_inst.src_mem} : {csim_inst}'
     assert hex(csim_inst.pc) == load_pc, f'{load_uiid} pcs do not match: CS pc={hex(csim_inst.pc)}, load PC={load_pc}'
 
-
+    
+MAX_BRANCHES_TRACKED = 10000
 def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=None):
     # Both traces are sorted temporally. So, we traverse along the
     # load trace and, for each load, search in increasing order
@@ -81,6 +82,15 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
                 if inst.is_branch: # Insert the branch into the sorted list (sorted by uiid)
                     bisect.insort(branch_uiids, i)
                     branch_data[i] = (inst.pc, inst.branch_taken)
+                    
+                    # Clear old branch instructions to conserve memory
+                    # (should not cause major impacts)
+                    if len(branch_uiids) > MAX_BRANCHES_TRACKED:
+                        remove_uiid = branch_uiids[0]
+                        branch_uiids = branch_uiids[1:]
+                        del branch_data[remove_uiid]
+                    
+                    
             max_seen_uiid = uiid
         else:
             cf.seek((uiid - 1) * INST_SIZE)
