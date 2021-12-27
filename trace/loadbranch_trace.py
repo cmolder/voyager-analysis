@@ -9,7 +9,7 @@ save it to a load-branch trace file (-o <output_trace>).
 
 If something is off, an error is raised explaining the issue.
 
-Need to run from above tracebuilder/ directory. If you still get an error,
+Need to run from above trace/ directory. If you still get an error,
 try export PYTHONPATH=.
 """
 
@@ -19,6 +19,7 @@ import gzip
 import argparse
 import bisect
 from utils.champsim_trace import get_instructions, INST_SIZE
+from utils.load import get_open_function
 #from tqdm import tqdm
 
 MAX_BRANCHES_TRACKED = 10000
@@ -158,14 +159,6 @@ def get_arguments():
     print('    Verbose        :', args.verbose)
 
     return args
-
-
-def get_open_function(path):
-    if path.endswith('xz'):
-        return lzma.open
-    elif path.endswith('gz'):
-        return gzip.open
-    return open
 
 
 if __name__ == '__main__':

@@ -2,17 +2,29 @@
 using load(-branch) traces.
 
 TODO: Implement branch history (if looking at a load-branch trace.)
+
+Need to run from above corr/ directory. If you still get an error,
+try export PYTHONPATH=.
 """
 
 import argparse
-import lzma
 import time
+from tqdm import tqdm
+from utils.load import get_open_function
 
 
 def gather_correlation_data(f, cd, pcd):
     """Wrapper function to gather correlation data
     from each address in the load trace."""
-    for addr in read_file(f):
+
+    # Count number of lines
+    nlines = 0
+    for line in f:
+        nlines += 1
+    f.seek(0)
+
+    #for addr in read_file(f):
+    for addr in tqdm(read_file(f),  unit='line', dynamic_ncols=True):
         cd.add_addr(addr)
         pcd.add_addr(addr)
 
@@ -34,8 +46,6 @@ def read_file(f):
 
         # Yield address
         yield extract_addr(line)
-
-
 
 
 class CorrelationData(object):
@@ -108,8 +118,8 @@ def print_freqs(freqs, suffix=''):
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('load_trace')
-    parser.add_argument('--depth', type=int, default=1)
-    parser.add_argument('--max-hist-len', type=int, default=5)
+    parser.add_argument('-d', '--depth', type=int, default=1)
+    parser.add_argument('-l', '--max-hist-len', type=int, default=5)
     args = parser.parse_args()
 
     print('Arguments:')
@@ -126,12 +136,9 @@ def compute_correlation(load_trace, depth, max_hist_len):
     page_correlation_data = CorrelationData(depth, max_hist_len, shift=6)
     start = time.time()
 
-    if load_trace.endswith('xz'):
-        with lzma.open(load_trace, mode='rt', encoding='utf-8') as f:
-            gather_correlation_data(f, correlation_data, page_correlation_data)
-    else:
-        with open(load_trace) as f:
-            gather_correlation_data(f, correlation_data, page_correlation_data)
+    l_open = get_open_function(load_trace)
+    with l_open(load_trace, mode='rt', encoding='utf-8') as f:
+        gather_correlation_data(f, correlation_data, page_correlation_data)
 
     print_freqs(correlation_data.compute_freqs(), 'Cache Lines')
     print_freqs(page_correlation_data.compute_freqs(), 'Pages')

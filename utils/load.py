@@ -4,6 +4,17 @@ import numpy as np
 import pandas as pd
 import attrdict
 
+
+def get_open_function(path):
+    """Choose an open function based on the file's extension."""
+    if path.endswith('xz'):
+        return lzma.open
+    elif path.endswith('gz'):
+        return gzip.open
+    return open
+
+
+
 def load_simpoint_weights(simpoints_dir, trace):
     """Load simpoint weights for a given trace."""
     simpoints = pd.DataFrame(columns=['trace', 'weight'])

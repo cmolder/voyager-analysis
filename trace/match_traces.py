@@ -3,7 +3,7 @@ trying to match LLC loads to their locations in
 the ChampSim trace. If something is off, an
 error is raised explaining the issue.
 
-Need to run from above corr/ directory. If you still get an error,
+Need to run from above trace/ directory. If you still get an error,
 try export PYTHONPATH=.
 """
 

@@ -6,7 +6,7 @@ error is raised explaining the issue.
 Additionally, we will report the M most recent branches (PCs and their
 decisions).
 
-Need to run from above corr/ directory. If you still get an error,
+Need to run from above trace/ directory. If you still get an error,
 try export PYTHONPATH=.
 """
 
