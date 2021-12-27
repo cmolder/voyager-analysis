@@ -63,7 +63,6 @@ def match_traces(cf, lf):
         #print(f'{uiid:8} CS  : pc={bin(inst.pc)} src_mem={bin(inst.src_mem[0])}')
 
 
-"""Driver (and helper) functions"""
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('champsim_trace')
@@ -95,5 +94,3 @@ if __name__ == '__main__':
 
     with cs_open(args.champsim_trace, mode='rb') as cf, l_open(args.load_trace, mode='rt', encoding='utf-8') as lf:
         match_traces(cf, lf)
-
-

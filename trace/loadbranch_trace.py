@@ -14,8 +14,6 @@ try export PYTHONPATH=.
 """
 
 import time
-import lzma
-import gzip
 import argparse
 import bisect
 from utils.champsim_trace import get_instructions, INST_SIZE

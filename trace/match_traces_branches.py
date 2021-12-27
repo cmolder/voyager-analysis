@@ -78,7 +78,6 @@ def match_traces(cf, lf, branch_hist=0):
             print()
 
 
-"""Driver (and helper) functions"""
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('champsim_trace')
@@ -112,4 +111,3 @@ if __name__ == '__main__':
 
     with cs_open(args.champsim_trace, mode='rb') as cf, l_open(args.load_trace, mode='rt', encoding='utf-8') as lf:
         match_traces(cf, lf, branch_hist=args.n_branches)
-
