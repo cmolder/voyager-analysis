@@ -1,5 +1,7 @@
 """Compute correlation between access history and next prefetch,
-using load traces.
+using load(-branch) traces.
+
+TODO: Implement branch history (if looking at a load-branch trace.)
 """
 
 import argparse
@@ -7,7 +9,6 @@ import lzma
 import time
 
 
-"""File I/O"""
 def gather_correlation_data(f, cd, pcd):
     """Wrapper function to gather correlation data
     from each address in the load trace."""
@@ -17,13 +18,13 @@ def gather_correlation_data(f, cd, pcd):
 
 
 def extract_addr(line):
+    """Extract address from a line in the load trace."""
     return int(line.split(', ')[2], 16)
 
 
 def read_file(f):
-    """Process the opened file as a generator (note the yield)
-    Yield every loaded data address.
-    
+    """Process the opened file as a generator, (note the yield)
+    yielding every loaded data address.
     Can call using gather_correlation_data inside an
     open (or variant) context."""
     for line in f:
@@ -36,9 +37,9 @@ def read_file(f):
 
 
 
-"""Correlation"""
-class CorrelationData(object):
 
+class CorrelationData(object):
+    """Track correlation between address histories (triggers) and the next prefetch address."""
     def __init__(self, depth, max_hist_len, shift=0):
         self.depth = depth
         self.hist = []
@@ -97,21 +98,20 @@ class CorrelationData(object):
 
         return freqs
 
+
 def print_freqs(freqs, suffix=''):
     for hist_len in freqs:
         print(hist_len, suffix)
         print({k: freqs[hist_len][k] for k in sorted(freqs[hist_len])})
 
-# Main temporal correlation computation
 
-"""Driver (and helper) functions"""
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('load_trace')
     parser.add_argument('--depth', type=int, default=1)
     parser.add_argument('--max-hist-len', type=int, default=5)
     args = parser.parse_args()
-    
+
     print('Arguments:')
     print('    Load trace     :', args.load_trace)
     print('    Depth          :', args.depth)
@@ -121,13 +121,14 @@ def get_argument_parser():
 
 
 def compute_correlation(load_trace, depth, max_hist_len):
+    """Main temporal correlation computation"""
     correlation_data = CorrelationData(depth, max_hist_len)
     page_correlation_data = CorrelationData(depth, max_hist_len, shift=6)
     start = time.time()
 
     if load_trace.endswith('xz'):
         with lzma.open(load_trace, mode='rt', encoding='utf-8') as f:
-            gather_correlation_data(f, correlation_data, page_correlation_data)     
+            gather_correlation_data(f, correlation_data, page_correlation_data)
     else:
         with open(load_trace) as f:
             gather_correlation_data(f, correlation_data, page_correlation_data)

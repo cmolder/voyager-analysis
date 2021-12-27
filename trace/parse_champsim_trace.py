@@ -1,6 +1,6 @@
 """Read ChampSim trace (compressed binary)
 
-Need to run from above corr/ directory. If you still get an error,
+Need to run from above trace/ directory. If you still get an error,
 try export PYTHONPATH=."""
 import lzma
 import gzip

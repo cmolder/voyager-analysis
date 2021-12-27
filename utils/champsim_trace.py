@@ -2,7 +2,11 @@ INST_SIZE = 64
 N_INST_DESTS = 2
 N_INST_SRCS = 4
 
+
 def read_champsim_trace(f, max_inst=100):
+    """Read and print each instruction of the ChampSim trace,
+    up to max_inst instructions.
+    """
     for i, bytearr in enumerate(_get_instruction_bytes(f)):
         #print(f'{i + 1:8}:', bytearr)
         inst = Instruction(bytearr)
@@ -11,7 +15,10 @@ def read_champsim_trace(f, max_inst=100):
         if i + 1 >= max_inst:
             return
 
+
 def _get_instruction_bytes(f):
+    """Yield the next INST_SIZE bytes of the file,
+    as a generator."""
     while True:
         bytearr = f.read(INST_SIZE)
         if not bytearr or len(bytearr) < INST_SIZE:
@@ -20,6 +27,8 @@ def _get_instruction_bytes(f):
 
 
 def get_instructions(f):
+    """Yield the next instruction in the file,
+    as a generator."""
     while True:
         bytearr = f.read(INST_SIZE)
         if not bytearr or len(bytearr) < INST_SIZE:
@@ -28,6 +37,10 @@ def get_instructions(f):
 
 
 class Instruction:
+    """Interpret a INST_SIZE byte chunk of the file
+    as its proper instruction notation.
+    For further reference, see instruction code in ChampSim repo.
+    """
     def __init__(self, bytearr):
         self.pc = int.from_bytes(bytearr[:8], 'little')
         assert bytearr[8] == 0 or bytearr[8] == 1, f'is_branch not boolean, is {bytearr[8]}'
@@ -50,12 +63,12 @@ class Instruction:
                 self.src_regs.append(reg)
         for i in range(N_INST_DESTS):
             start = 10 + N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = int.from_bytes(bytearr[start : start + 8], 'little')
+            addr = int.from_bytes(bytearr[start:start + 8], 'little')
             if addr > 0:
                 self.dest_mem.append(addr)
         for i in range(N_INST_SRCS):
-            start = 10 + 9*N_INST_DESTS + N_INST_SRCS + i * 8
-            addr = int.from_bytes(bytearr[start : start + 8], 'little')
+            start = 10 + 9 * N_INST_DESTS + N_INST_SRCS + i * 8
+            addr = int.from_bytes(bytearr[start:start + 8], 'little')
             if addr > 0:
                 self.src_mem.append(addr)
 

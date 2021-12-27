@@ -1,26 +1,28 @@
-"""Read ChampSim trace and load trace simultaneously,
-trying to match LLC loads to their locations in
-the ChampSim trace.
+"""Read ChampSim trace and LLC load trace simultaneously,
+matching each LLC load to its location in the ChampSim
+trace, to build a LLC load-branch trace where each LLC
+load has features of prior branch instructions added.
 
-Once we do this, track the <n_branches>
-prior branch PCs + taken decisions. You can either
-print this data out (-v) or save it to an output load trace <output_trace>
-with branch history data.
+We determine each LLC load's <n_branches> prior branch PCs
+and taken decisions, and print this data out (-v) and/or
+save it to a load-branch trace file (-o <output_trace>).
 
 If something is off, an error is raised explaining the issue.
 
-Need to run from above corr/ directory. If you still get an error,
+Need to run from above tracebuilder/ directory. If you still get an error,
 try export PYTHONPATH=.
 """
 
-import sys
 import time
 import lzma
 import gzip
 import argparse
 import bisect
 from utils.champsim_trace import get_instructions, INST_SIZE
-from tqdm import tqdm
+#from tqdm import tqdm
+
+MAX_BRANCHES_TRACKED = 10000
+WRITE_INTERVAL = 1000 # Write in batches to reduce compression computations.
 
 
 def parse_load_line(line):
@@ -39,8 +41,6 @@ def assert_comparison(csim_inst, load_uiid, load_pc):
     assert hex(csim_inst.pc) == load_pc, f'{load_uiid} pcs do not match: CS pc={hex(csim_inst.pc)}, load PC={load_pc}'
 
 
-MAX_BRANCHES_TRACKED = 10000
-WRITE_INTERVAL = 1000 # Write in batches to reduce compression cost.
 def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=None):
     # Both traces are sorted temporally. So, we traverse along the
     # load trace and, for each load, search in increasing order
@@ -139,8 +139,6 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
                     out_buffer = ''
 
 
-
-"""Driver (and helper) functions"""
 def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('champsim_trace')
@@ -179,7 +177,8 @@ if __name__ == '__main__':
 
     if args.output_trace:
         of = o_open(args.output_trace, mode='wt', encoding='utf-8')
-    else: of = None
+    else:
+        of = None
 
     with cs_open(args.champsim_trace, mode='rb') as cf, l_open(args.load_trace, mode='rt', encoding='utf-8') as lf:
         match_traces(
@@ -192,4 +191,3 @@ if __name__ == '__main__':
 
     if args.output_trace:
         of.close()
-
