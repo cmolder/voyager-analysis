@@ -9,7 +9,7 @@ Analysis of the Voyager data prefetcher model, and SPEC-06 / GAP traces.
 
 
 
-# Notebooks
+## Notebooks
 Jupyter notebooks to analyze results collected from ChampSim and trace analysis.
 
 ## data
