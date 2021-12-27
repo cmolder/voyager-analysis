@@ -1,5 +1,7 @@
 import os
 import glob
+import lzma
+import gzip
 import numpy as np
 import pandas as pd
 import attrdict

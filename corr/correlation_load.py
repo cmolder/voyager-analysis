@@ -24,7 +24,7 @@ def gather_correlation_data(f, cd, pcd):
     f.seek(0)
 
     #for addr in read_file(f):
-    for addr in tqdm(read_file(f),  unit='line', dynamic_ncols=True):
+    for addr in tqdm(read_file(f), total=nlines, unit='line', dynamic_ncols=True):
         cd.add_addr(addr)
         pcd.add_addr(addr)
 
