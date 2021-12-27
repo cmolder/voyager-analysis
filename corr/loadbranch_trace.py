@@ -79,6 +79,9 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
             cf.seek(max_seen_uiid * INST_SIZE)
             for i in range(max_seen_uiid, uiid):
                 inst = next(get_instructions(cf), None)
+                if not inst:
+                    print('ChampSim trace out of instructions. Returning.')
+                    return
                 if inst.is_branch: # Insert the branch into the sorted list (sorted by uiid)
                     bisect.insort(branch_uiids, i)
                     branch_data[i] = (inst.pc, inst.branch_taken)
@@ -90,21 +93,13 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
                         branch_uiids = branch_uiids[1:]
                         del branch_data[remove_uiid]
                     
-                    
             max_seen_uiid = uiid
-        else:
-            cf.seek((uiid - 1) * INST_SIZE)
-            inst = next(get_instructions(cf), None)
+        #else:
+        #    cf.seek((uiid - 1) * INST_SIZE)
+        #    inst = next(get_instructions(cf), None)
         
-        # If the ChampSim trace runs out of instructions to parse, we
-        # are finished. Return.
-        # (This shouldn't happen)
-        if not inst:
-            print('ChampSim trace ran out of instructions. Returning.')
-            return
-
         # Assertion checks
-        assert_comparison(inst, uiid, pc)
+        #assert_comparison(inst, uiid, pc)
         
         if verbose:
             print(f'\n{uiid:8} Load    : pc={pc} src_mem={src_addr}')
@@ -130,11 +125,11 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
             # Branch <n_branches> is the least recent branch.
             # If there are less than <n_branches> prior branches, the PC/Taken will both be 0.
             if write_f:
-                print(line.rstrip('\n'), end='', file=write_f)
+                outline = line.rstrip('\n')
                 for i in range(branch_hist):
                     pc, dec = branch_data[prior_branch_uiids[i]] if i < len(prior_branch_uiids) else (0, 0)
-                    print(f', {hex(pc)[2:]}, {int(dec)}', end='', file=write_f)
-                print('\n', end='', file=write_f)
+                    outline += f', {hex(pc)[2:]}, {int(dec)}'
+                print(outline, file=write_f)
             
 
 
