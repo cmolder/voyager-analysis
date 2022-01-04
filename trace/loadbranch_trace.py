@@ -137,6 +137,9 @@ def match_traces(cf, lf, branch_hist=0, max_inst=None, verbose=False, write_f=No
                     print(out_buffer, end='', file=write_f)
                     out_buffer = ''
 
+    # Write anything left over in buffer.
+    print(out_buffer, end='', file=write_f)
+
 
 def get_arguments():
     parser = argparse.ArgumentParser()

@@ -8,15 +8,13 @@ class LoadTraceInstruction(object):
         self.pc = int(tokens[3], 16)
         self.is_hit = bool(tokens[4])
 
-        self.branches = []
-        for i in range(5, len(tokens), 2):
-            branch_pc, branch_dec = int(tokens[i], 16), bool(tokens[i + 1])
-            self.branches.append((branch_pc, branch_dec))
+        # List of (pc, dec) tuples, from most recent to least recent.
+        self.branches = [(int(tokens[i], 16), bool(tokens[i + 1])) for i in range(5, len(tokens), 2)]
 
     def __str__(self):
         s = f'uiid={self.uiid} cycle={self.cycle} pc={hex(self.pc)} addr={hex(self.addr)} is_hit={self.is_hit} branches=['
         for pc, dec in self.branches:
-            if pc == 0 and dec == False:
+            if pc == 0 and not dec:
                 continue
             s += f'(pc={hex(pc)} dec={"T" if dec else "NT"})'
         s += ']'
