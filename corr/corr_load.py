@@ -1,7 +1,5 @@
 """Compute correlation between access history and next prefetch,
-using load(-branch) traces.
-
-TODO: Implement branch history (if looking at a load-branch trace.)
+using load traces.
 
 Need to run from above corr/ directory. If you still get an error,
 try export PYTHONPATH=.
@@ -9,9 +7,9 @@ try export PYTHONPATH=.
 
 import argparse
 import time
-from tqdm import tqdm
 from utils.load import get_open_function
 from utils.load_trace import get_instructions
+from utils.logging import log_progress
 
 
 def gather_correlation_data(f, cd, pcd):
@@ -24,27 +22,33 @@ def gather_correlation_data(f, cd, pcd):
         nlines += 1
     f.seek(0)
 
-    #for addr in read_file(f):
-    for inst in tqdm(get_instructions(f), total=nlines, unit='line', dynamic_ncols=True):
+    start_time = time.time()
+    for lnum, inst in enumerate(get_instructions(f)):
+        
+        # Periodically log progress
+        log_progress(lnum, nlines, start_time, interval=50000)
+        
+        # Add load to correlation tracker
         addr = inst.addr
         cd.add_addr(addr)
         pcd.add_addr(addr)
+        
+    # Print time to run
+    print('Time to run:', (time.time() - start_time) / 60, 'min')
 
 
 class CorrelationData(object):
     """Track correlation between address histories (triggers) and the next prefetch address.
 
-    depth : ?
-    max_hist_len     : number of prior PC-localized load addresses to consider as part of the trigger.
+    depth            : how many prefetches to look ahead
+        - e.g. 1 = next prefetch, 2 = the second prefetch ahead, etc.
+    max_hist_len     : number of prior global load addresses to consider as part of the trigger.
         - Track all triggers of length 1 to max_hist_len (inclusive)
-    max_branch_len   : number of prior branches to track as part of the trigger.
-    track_branch_pc  : whether to track the PC of each prior branch.
-    track_branch_dec : whether to track the taken/not taken decision of each prior branch.
     shift            : number of bits to cut-off for tracking
-        - 0 corresponds to cache line temporal correlation
-        - 6 corresponds to page temporal correlation
+        - 0 : cache line temporal correlation
+        - 6 : page temporal correlation
     """
-    def __init__(self, depth, max_hist_len, max_branch_len=0, track_branch_pc=False, track_branch_dec=False, shift=0):
+    def __init__(self, depth, max_hist_len, shift=0):
         self.depth = depth
         self.hist = []
         # We're considering the correlation for triggers of length 1 to max_hist_len (inclusive)
@@ -53,12 +57,6 @@ class CorrelationData(object):
         # How much extra to cutoff for tracking.
         # 0 corresponds to cache line temporal correlation
         # 6 corresponds to page temporal correlation
-        self.max_branch_len = max_branch_len
-        if self.max_branch_len > 0:
-            assert track_branch_pc or track_branch_dec, 'Must track at least one of PC / taken decision if tracking prior branches.'
-
-        self.track_branch_pc = track_branch_pc
-        self.track_branch_dec = track_branch_dec
         self.shift = shift
 
     def add_addr(self, addr):
@@ -119,7 +117,7 @@ def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('load_trace')
     parser.add_argument('-d', '--depth', type=int, default=1)
-    parser.add_argument('-l', '--max-hist-len', type=int, default=5)
+    parser.add_argument('-l', '--max-hist-len', type=int, default=4)
     args = parser.parse_args()
 
     print('Arguments:')
